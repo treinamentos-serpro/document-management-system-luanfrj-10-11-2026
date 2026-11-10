@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import UploadComponent from './components/UploadComponent';
 import DocumentList from './components/DocumentList';
-import { listDocuments } from './services/documents';
+import { INVALID_OWNER_MESSAGE, isValidOwner, listDocuments } from './services/documents';
 import './App.css';
 
 export default function App() {
   const [userInput, setUserInput] = useState('');
+  const [userError, setUserError] = useState('');
   const [owner, setOwner] = useState('');
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,11 @@ export default function App() {
   function selectOwner(event) {
     event.preventDefault();
     const nextOwner = userInput.trim();
-    if (!nextOwner) return;
+    if (!isValidOwner(nextOwner)) {
+      setUserError(INVALID_OWNER_MESSAGE);
+      return;
+    }
+    setUserError('');
     if (nextOwner !== owner) {
       setDocuments([]);
       setOwner(nextOwner);
@@ -67,9 +72,10 @@ export default function App() {
           <form className="identity-form" onSubmit={selectOwner}>
             <label htmlFor="owner">Identificador do usuário</label>
             <div className="identity-controls">
-              <input id="owner" value={userInput} onChange={(event) => setUserInput(event.target.value)} maxLength={128} required placeholder="Seu identificador" />
+              <input id="owner" value={userInput} onChange={(event) => { setUserInput(event.target.value); setUserError(''); }} maxLength={128} required placeholder="Seu identificador" aria-invalid={Boolean(userError)} aria-describedby={userError ? 'owner-error' : undefined} />
               <button type="submit" className="button button-secondary">Acessar</button>
             </div>
+            {userError && <p id="owner-error" className="error-text form-feedback" role="alert">{userError}</p>}
           </form>
         </section>
 

@@ -1,4 +1,14 @@
+export const INVALID_OWNER_MESSAGE = 'Use letras sem acentos ou com acentos comuns, números e símbolos simples.';
+
+export function isValidOwner(owner) {
+  return owner.length <= 128 && Boolean(owner.trim()) && /^[\x20-\x7e\xa0-\xff]+$/.test(owner);
+}
+
 async function request(path, owner, options = {}) {
+  if (!isValidOwner(owner)) {
+    throw new Error(INVALID_OWNER_MESSAGE);
+  }
+
   const response = await fetch(`/api${path}`, {
     ...options,
     headers: { ...options.headers, 'X-User-Id': owner },

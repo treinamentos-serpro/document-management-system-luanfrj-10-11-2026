@@ -36,6 +36,7 @@ input[type='file'] { min-width: 0; flex: 1; padding: 5px; border: 1px solid #cbd
 input[type='file']::file-selector-button { border: 0; padding: 7px 10px; margin-right: 10px; border-radius: 3px; background: #e8eee9; color: #234b3f; font-weight: 700; cursor: pointer; }
 .form-feedback:not(:empty) { margin-top: 9px; font-size: 13px; }
 .error-text { color: #a1372d; }
+.identity-section .error-text { color: #a1372d; margin-top: 9px; }
 .success-text { color: #286744; }
 .documents-section { margin-top: 47px; }
 .section-heading { margin-bottom: 20px; }
