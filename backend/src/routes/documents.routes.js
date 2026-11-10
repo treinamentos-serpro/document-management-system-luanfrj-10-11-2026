@@ -16,14 +16,22 @@ const maxFileSize = Number.isSafeInteger(configuredFileSize) && configuredFileSi
   ? configuredFileSize
   : 10 * 1024 * 1024;
 
-fs.mkdirSync(storageDirectory, { recursive: true });
+fs.mkdirSync(storageDirectory, { recursive: true, mode: 0o700 });
+fs.chmodSync(storageDirectory, 0o700);
 
 const upload = multer({
+  defParamCharset: 'utf8',
   storage: multer.diskStorage({
     destination: (_req, _file, callback) => callback(null, storageDirectory),
     filename: (_req, _file, callback) => callback(null, randomUUID()),
   }),
-  limits: { fileSize: maxFileSize, files: 1 },
+  limits: {
+    fileSize: maxFileSize,
+    files: 1,
+    fields: 0,
+    parts: 2,
+    fieldNameSize: 100,
+  },
 });
 
 function handleUpload(req, res, next) {
@@ -34,7 +42,9 @@ function handleUpload(req, res, next) {
 
     if (error instanceof multer.MulterError) {
       const isTooLarge = error.code === 'LIMIT_FILE_SIZE';
-      const isUnexpectedFile = error.code === 'LIMIT_UNEXPECTED_FILE';
+      const isUnexpectedFile = error.code === 'LIMIT_UNEXPECTED_FILE'
+        || error.code === 'LIMIT_PART_COUNT'
+        || error.code === 'LIMIT_FILE_COUNT';
 
       if (isTooLarge || isUnexpectedFile) {
         return res.status(isTooLarge ? 413 : 400).json({
@@ -49,6 +59,19 @@ function handleUpload(req, res, next) {
 
       return res.status(400).json({
         error: { code: 'INVALID_UPLOAD', message: 'A requisição de upload é inválida.' },
+      });
+    }
+
+    const isMalformedMultipart = [
+      'Multipart: Boundary not found',
+      'Malformed part header',
+      'Unexpected end of file',
+      'Unexpected end of form',
+    ].includes(error.message);
+
+    if (isMalformedMultipart) {
+      return res.status(400).json({
+        error: { code: 'INVALID_MULTIPART', message: 'A requisição de upload é inválida.' },
       });
     }
 
