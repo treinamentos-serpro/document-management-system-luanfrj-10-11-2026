@@ -60,7 +60,8 @@ function download(req, res) {
     return respondWithError(res, 'DOCUMENT_NOT_FOUND', 'Documento não encontrado.', 404);
   }
 
-  res.type(document.mimeType || 'application/octet-stream');
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.type('application/octet-stream');
   return res.download(document.filePath, document.originalName, (error) => {
     if (error && !res.headersSent) {
       const isMissingFile = error.code === 'ENOENT';
